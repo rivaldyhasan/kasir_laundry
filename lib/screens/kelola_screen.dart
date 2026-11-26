@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../data/app_store.dart';
 import '../models/models.dart';
 import '../utils/format.dart';
+import '../utils/tema.dart';
 import '../utils/widgets.dart';
 
 /// KF-02 (cabang dan pengguna), KF-04 (layanan dan harga), KF-11 (QRIS toko).
@@ -21,6 +22,11 @@ class KelolaScreen extends StatelessWidget {
           title: const Text('Kelola'),
           bottom: const TabBar(
             isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelColor: kHitam,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: kHitam,
+            dividerColor: kGaris,
             tabs: [
               Tab(text: 'Layanan'),
               Tab(text: 'Cabang'),
@@ -151,34 +157,57 @@ class _TabLayanan extends StatelessWidget {
     return ListenableBuilder(
       listenable: s,
       builder: (context, _) {
-        final utama = s.layanan.where((e) => e.jenis == JenisLayanan.utama).toList();
+        final utama =
+            s.layanan.where((e) => e.jenis == JenisLayanan.utama).toList();
         final tambahan = s.layananTambahan;
-        return ListView(
-          padding: const EdgeInsets.all(12),
-          children: [
-            FilledButton.icon(
-                onPressed: () => _form(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Tambah layanan')),
-            const Judul('Layanan utama (harga per bahan dan paket)'),
-            for (final l in utama)
-              ListTile(
-                dense: true,
-                title: Text('${l.tipeBahan} • ${l.nama}'),
-                trailing: Text(rupiah(l.harga),
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                onTap: () => _form(context, l),
+        final perBahan = <String, List<Layanan>>{};
+        for (final l in utama) {
+          perBahan.putIfAbsent(l.tipeBahan ?? '-', () => []).add(l);
+        }
+        return _Tengah(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            children: [
+              FilledButton.icon(
+                  onPressed: () => _form(context),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Tambah layanan')),
+              const SizedBox(height: 12),
+              Panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Layanan utama',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text('Harga per jenis bahan dan paket',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const SizedBox(height: 10),
+                    for (final e in perBahan.entries) ...[
+                      LabelKecil(e.key),
+                      const SizedBox(height: 2),
+                      for (final l in e.value)
+                        _BarisHarga(l.nama, l.harga, () => _form(context, l)),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
               ),
-            const Judul('Layanan tambahan'),
-            for (final l in tambahan)
-              ListTile(
-                dense: true,
-                title: Text(l.nama),
-                trailing: Text(rupiah(l.harga),
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                onTap: () => _form(context, l),
+              Panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Layanan tambahan',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 6),
+                    for (final l in tambahan)
+                      _BarisHarga(l.nama, l.harga, () => _form(context, l)),
+                  ],
+                ),
               ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -273,24 +302,62 @@ class _TabCabang extends StatelessWidget {
     final s = AppStore.instance;
     return ListenableBuilder(
       listenable: s,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          FilledButton.icon(
-              onPressed: () => _form(context),
-              icon: const Icon(Icons.add_business),
-              label: const Text('Tambah cabang')),
-          const SizedBox(height: 8),
-          for (final c in s.cabang)
-            Card(
-              child: ListTile(
-                leading: CircleAvatar(child: Text(c.kode)),
-                title: Text(c.nama),
-                subtitle: Text(c.alamat),
-                onTap: () => _form(context, c),
+      builder: (context, _) => _Tengah(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            FilledButton.icon(
+                onPressed: () => _form(context),
+                icon: const Icon(Icons.add_business_outlined, size: 18),
+                label: const Text('Tambah cabang')),
+            const SizedBox(height: 12),
+            for (final c in s.cabang)
+              Panel(
+                padding: EdgeInsets.zero,
+                child: InkWell(
+                  onTap: () => _form(context, c),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: kHitam,
+                          child: Text(c.kode,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(c.nama,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                              if (c.alamat.isNotEmpty)
+                                Text(c.alamat,
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 12.5)),
+                              if (c.noWhatsapp.isNotEmpty)
+                                Text('WA ${c.noWhatsapp}',
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -401,51 +468,88 @@ class _TabPengguna extends StatelessWidget {
     final s = AppStore.instance;
     return ListenableBuilder(
       listenable: s,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          FilledButton.icon(
-              onPressed: () => _form(context),
-              icon: const Icon(Icons.person_add),
-              label: const Text('Tambah pengguna')),
-          const SizedBox(height: 8),
-          for (final p in s.pengguna)
-            Card(
-              child: ListTile(
-                leading: CircleAvatar(
-                    child: Icon(p.role == Role.owner
-                        ? Icons.admin_panel_settings
-                        : Icons.point_of_sale)),
-                title: Text(p.nama),
-                subtitle: Text(
-                    '@${p.username} • ${p.role.label} • ${s.cabangById(p.idCabang)?.nama ?? '-'}'),
-                trailing: IconButton(
-                  tooltip: 'Hapus',
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () async {
-                    final yakin = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Hapus pengguna?'),
-                        content: Text('Akun ${p.username} akan dihapus.'),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: const Text('Batal')),
-                          FilledButton(
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Hapus')),
+      builder: (context, _) => _Tengah(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            FilledButton.icon(
+                onPressed: () => _form(context),
+                icon: const Icon(Icons.person_add_alt, size: 18),
+                label: const Text('Tambah pengguna')),
+            const SizedBox(height: 12),
+            for (final p in s.pengguna)
+              Panel(
+                padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: kHitam,
+                      child: Icon(
+                          p.role == Role.owner
+                              ? Icons.admin_panel_settings_outlined
+                              : Icons.point_of_sale,
+                          color: Colors.white,
+                          size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(p.nama,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text('@${p.username}',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12.5)),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
+                            children: [
+                              LabelChip(
+                                  p.role.label,
+                                  p.role == Role.owner
+                                      ? Colors.deepPurple
+                                      : Colors.blueGrey),
+                              LabelChip(s.cabangById(p.idCabang)?.nama ?? '-',
+                                  Colors.teal),
+                            ],
+                          ),
                         ],
                       ),
-                    );
-                    if (yakin != true) return;
-                    final err = s.hapusPengguna(p.id);
-                    if (err != null && context.mounted) snack(context, err);
-                  },
+                    ),
+                    IconButton(
+                      tooltip: 'Hapus',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        final yakin = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Hapus pengguna?'),
+                            content: Text('Akun ${p.username} akan dihapus.'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Batal')),
+                              FilledButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Hapus')),
+                            ],
+                          ),
+                        );
+                        if (yakin != true) return;
+                        final err = s.hapusPengguna(p.id);
+                        if (err != null && context.mounted) {
+                          snack(context, err);
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -472,58 +576,148 @@ class _TabPengaturan extends StatelessWidget {
     final s = AppStore.instance;
     return ListenableBuilder(
       listenable: s,
-      builder: (context, _) => ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          const Judul('QRIS toko (ditampilkan pada layar pembayaran)'),
-          if (s.qrisPath != null)
-            gambarDariPath(s.qrisPath!,
-                height: 240,
-                errorBuilder: (_, _, _) =>
-                    const Text('Gambar tidak dapat dibuka.'))
-          else
-            const Text('Belum ada gambar QRIS.'),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              FilledButton.icon(
-                  onPressed: () => _pilihQris(context),
-                  icon: const Icon(Icons.qr_code_2),
-                  label: Text(s.qrisPath == null ? 'Unggah QRIS' : 'Ganti QRIS')),
-              const SizedBox(width: 8),
-              if (s.qrisPath != null)
-                TextButton(
-                    onPressed: () => s.setQris(null), child: const Text('Hapus')),
-            ],
-          ),
-          const Judul('Data uji coba'),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final yakin = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Reset semua data?'),
-                  content: const Text(
-                      'Semua order, pelanggan, dan pengaturan dikembalikan ke data awal. Anda akan keluar dari akun.'),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Batal')),
-                    FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Reset')),
-                  ],
-                ),
-              );
-              if (yakin != true || !context.mounted) return;
-              Navigator.popUntil(context, (r) => r.isFirst);
-              await s.resetKeSeed();
-            },
-            icon: const Icon(Icons.restart_alt),
-            label: const Text('Reset ke data awal'),
-          ),
-        ],
+      builder: (context, _) => _Tengah(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            Panel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('QRIS toko',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Text('Ditampilkan pada layar pembayaran',
+                      style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 12),
+                  if (s.qrisPath != null)
+                    Center(
+                      child: gambarDariPath(s.qrisPath!,
+                          height: 240,
+                          errorBuilder: (_, _, _) =>
+                              const Text('Gambar tidak dapat dibuka.')),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 28),
+                      decoration: BoxDecoration(
+                          color: kAbu, borderRadius: BorderRadius.circular(12)),
+                      child: const Column(
+                        children: [
+                          Icon(Icons.qr_code_2, size: 40, color: Colors.grey),
+                          SizedBox(height: 6),
+                          Text('Belum ada gambar QRIS',
+                              style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                            onPressed: () => _pilihQris(context),
+                            icon: const Icon(Icons.qr_code_2, size: 18),
+                            label: Text(
+                                s.qrisPath == null ? 'Unggah QRIS' : 'Ganti QRIS')),
+                      ),
+                      if (s.qrisPath != null) ...[
+                        const SizedBox(width: 8),
+                        TextButton(
+                            onPressed: () => s.setQris(null),
+                            child: const Text('Hapus')),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Panel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Data uji coba',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const Text(
+                      'Mengembalikan semua order, pelanggan, dan pengaturan ke data awal.',
+                      style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 46),
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: kGaris),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      final yakin = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Reset semua data?'),
+                          content: const Text(
+                              'Semua order, pelanggan, dan pengaturan dikembalikan ke data awal. Anda akan keluar dari akun.'),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Batal')),
+                            FilledButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Reset')),
+                          ],
+                        ),
+                      );
+                      if (yakin != true || !context.mounted) return;
+                      Navigator.popUntil(context, (r) => r.isFirst);
+                      await s.resetKeSeed();
+                    },
+                    icon: const Icon(Icons.restart_alt, size: 18),
+                    label: const Text('Reset ke data awal'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------- bantu
+class _Tengah extends StatelessWidget {
+  final Widget child;
+  const _Tengah({required this.child});
+  @override
+  Widget build(BuildContext context) => Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: child,
+        ),
+      );
+}
+
+class _BarisHarga extends StatelessWidget {
+  final String nama;
+  final int harga;
+  final VoidCallback onTap;
+  const _BarisHarga(this.nama, this.harga, this.onTap);
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Expanded(child: Text(nama)),
+              Text(rupiah(harga),
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
+            ],
+          ),
+        ),
+      );
 }
