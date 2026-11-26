@@ -117,6 +117,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 children: [
                   Expanded(
                     child: Pil('Tunai',
+                        lebar: true,
                         ikon: Icons.payments_outlined,
                         aktif: _metode == MetodeBayar.tunai,
                         onTap: () =>
@@ -125,6 +126,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Pil('QRIS',
+                        lebar: true,
                         ikon: Icons.qr_code_2,
                         aktif: _metode == MetodeBayar.qris,
                         onTap: () =>

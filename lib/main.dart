@@ -56,7 +56,8 @@ class SendShoesApp extends StatelessWidget {
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 48),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ),

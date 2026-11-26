@@ -7,6 +7,7 @@ import '../utils/format.dart';
 import '../utils/tema.dart';
 import '../utils/wa_helper.dart';
 import '../utils/widgets.dart';
+import 'antar_jemput_screen.dart';
 import 'kelola_screen.dart';
 import 'laporan_screen.dart';
 import 'order_detail_screen.dart';
@@ -50,6 +51,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.local_shipping_outlined),
+              title: const Text('Antar-Jemput'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _bukaLayar(context, const AntarJemputScreen());
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.people_outline),
               title: const Text('Pelanggan'),

@@ -104,13 +104,19 @@ class Pil extends StatelessWidget {
   final bool aktif;
   final VoidCallback? onTap;
   final IconData? ikon;
+  final bool lebar; // true = isi teks di tengah saat dibungkus Expanded
   const Pil(this.teks,
-      {super.key, required this.aktif, this.onTap, this.ikon});
+      {super.key,
+      required this.aktif,
+      this.onTap,
+      this.ikon,
+      this.lebar = false});
   @override
   Widget build(BuildContext context) => InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
+          alignment: lebar ? Alignment.center : null,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
             color: aktif ? kHitam : Colors.white,
