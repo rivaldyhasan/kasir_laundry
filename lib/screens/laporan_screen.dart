@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/app_store.dart';
 import '../utils/format.dart';
@@ -61,14 +62,32 @@ class _LaporanScreenState extends State<LaporanScreen> {
       return;
     }
     try {
-      final dir = await getTemporaryDirectory();
       final (a, _) = _rentang;
       final nama =
           'laporan_${_periode.name}_${a.year}${a.month.toString().padLeft(2, '0')}${a.day.toString().padLeft(2, '0')}.csv';
+      final desktop =
+          Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
+      if (desktop) {
+        // Di laptop: simpan ke folder Downloads lalu buka dengan Excel.
+        final dir = await getDownloadsDirectory() ??
+            await getApplicationDocumentsDirectory();
+        final f = File('${dir.path}${Platform.pathSeparator}$nama');
+        await f.writeAsString(_s.laporanCsv(l));
+        if (!mounted) return;
+        snack(context, 'Laporan disimpan di ${f.path}');
+        await launchUrl(Uri.file(f.path));
+        return;
+      }
+
+      // Di HP: bagikan sebagai berkas (WhatsApp, Drive, email, dll.).
+      final dir = await getTemporaryDirectory();
       final f = File('${dir.path}/$nama');
       await f.writeAsString(_s.laporanCsv(l));
       await SharePlus.instance.share(ShareParams(
-          files: [XFile(f.path, mimeType: 'text/csv')], text: nama));
+          files: [XFile(f.path, mimeType: 'text/csv', name: nama)],
+          fileNameOverrides: [nama],
+          subject: nama));
     } catch (e) {
       if (!mounted) return;
       snack(context, 'Gagal mengekspor: $e');
