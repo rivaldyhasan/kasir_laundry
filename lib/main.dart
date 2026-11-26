@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'data/app_store.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'utils/bingkai_hp.dart';
 import 'utils/tema.dart';
 
 Future<void> main() async {
@@ -56,27 +57,17 @@ class SendShoesApp extends StatelessWidget {
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 48),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ),
-        // Di desktop, tampilkan aplikasi dalam bingkai selebar HP.
+        // Di desktop dan web, tampilkan aplikasi dalam bingkai iPhone.
+        // Di HP asli, atau jendela yang sempit, tampil penuh tanpa bingkai.
         builder: (context, child) {
-          if (!desktop) return child!;
-          return ColoredBox(
-            color: const Color(0xFF263238),
-            child: Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: SizedBox(
-                  width: 390,
-                  height: double.infinity,
-                  child: child,
-                ),
-              ),
-            ),
-          );
+          if (!desktop || MediaQuery.sizeOf(context).width < 500) {
+            return child!;
+          }
+          return BingkaiIphone(child: child!);
         },
         home: store.user == null ? const LoginScreen() : const HomeScreen(),
       ),

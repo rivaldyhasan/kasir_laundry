@@ -48,11 +48,10 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
   Future<void> _pilihTanggal() async {
     final d = await showDatePicker(
-      context: context,
-      initialDate: _acuan,
-      firstDate: DateTime(2025),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
-    );
+        context: context,
+        initialDate: _acuan,
+        firstDate: DateTime(2025),
+        lastDate: DateTime.now().add(const Duration(days: 1)));
     if (d != null) setState(() => _acuan = d);
   }
 
@@ -60,10 +59,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
     if (kIsWeb) {
       await Clipboard.setData(ClipboardData(text: _s.laporanCsv(l)));
       if (!mounted) return;
-      snack(
-        context,
-        'CSV disalin ke clipboard. Tempel ke Excel/Notepad lalu simpan.',
-      );
+      snack(context, 'CSV disalin ke clipboard. Tempel ke Excel/Notepad lalu simpan.');
       return;
     }
     try {
@@ -75,8 +71,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
       if (desktop) {
         // Di laptop: simpan ke folder Downloads lalu buka dengan Excel.
-        final dir =
-            await getDownloadsDirectory() ??
+        final dir = await getDownloadsDirectory() ??
             await getApplicationDocumentsDirectory();
         final f = File('${dir.path}${Platform.pathSeparator}$nama');
         await f.writeAsString(_s.laporanCsv(l));
@@ -90,13 +85,10 @@ class _LaporanScreenState extends State<LaporanScreen> {
       final dir = await getTemporaryDirectory();
       final f = File('${dir.path}/$nama');
       await f.writeAsString(_s.laporanCsv(l));
-      await SharePlus.instance.share(
-        ShareParams(
+      await SharePlus.instance.share(ShareParams(
           files: [XFile(f.path, mimeType: 'text/csv', name: nama)],
           fileNameOverrides: [nama],
-          subject: nama,
-        ),
-      );
+          subject: nama));
     } catch (e) {
       if (!mounted) return;
       snack(context, 'Gagal mengekspor: $e');
@@ -110,6 +102,13 @@ class _LaporanScreenState extends State<LaporanScreen> {
       builder: (context, _) {
         final (dari, sampai) = _rentang;
         final l = _s.laporan(dari: dari, sampai: sampai, idCabang: _cabang);
+        int pembayaranCabang(int idCabang) => _s.pembayaran.where((b) {
+              final p = _s.pesananById(b.idPesanan);
+              return p != null &&
+                  p.idCabang == idCabang &&
+                  !b.waktuBayar.isBefore(dari) &&
+                  b.waktuBayar.isBefore(sampai);
+            }).length;
         return Scaffold(
           appBar: AppBar(title: const Text('Laporan')),
           bottomNavigationBar: SafeArea(
@@ -135,8 +134,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
                         Expanded(
                           child: Padding(
                             padding: EdgeInsets.only(
-                              right: p == Periode.bulanan ? 0 : 8,
-                            ),
+                                right: p == Periode.bulanan ? 0 : 8),
                             child: Pil(
                               switch (p) {
                                 Periode.harian => 'Harian',
@@ -160,9 +158,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
+                                horizontal: 12, vertical: 12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
@@ -173,14 +169,11 @@ class _LaporanScreenState extends State<LaporanScreen> {
                                 const Icon(Icons.event_outlined, size: 18),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
-                                    _labelRentang,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
+                                  child: Text(_labelRentang,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13)),
                                 ),
                               ],
                             ),
@@ -199,21 +192,14 @@ class _LaporanScreenState extends State<LaporanScreen> {
                           child: DropdownButton<int?>(
                             value: _cabang,
                             style: const TextStyle(
-                              color: kHitam,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
+                                color: kHitam,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
                             items: [
                               const DropdownMenuItem<int?>(
-                                value: null,
-                                child: Text('Semua cabang'),
-                              ),
-                              ..._s.cabang.map(
-                                (c) => DropdownMenuItem<int?>(
-                                  value: c.id,
-                                  child: Text(c.nama),
-                                ),
-                              ),
+                                  value: null, child: Text('Semua cabang')),
+                              ..._s.cabang.map((c) => DropdownMenuItem<int?>(
+                                  value: c.id, child: Text(c.nama))),
                             ],
                             onChanged: (v) => setState(() => _cabang = v),
                           ),
@@ -232,19 +218,20 @@ class _LaporanScreenState extends State<LaporanScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Pendapatan (pembayaran masuk)',
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
-                        ),
+                        const Text('Pendapatan (pembayaran masuk)',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 12)),
                         const SizedBox(height: 6),
-                        Text(
-                          rupiah(l.pendapatan),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        Text(rupiah(l.pendapatan),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 8),
+                        const Text(
+                            'Dihitung dari pembayaran yang diterima pada periode ini, termasuk order yang masuk di hari lain.',
+                            style:
+                                TextStyle(color: Colors.white54, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -252,7 +239,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: _Angka('Jumlah order', '${l.pesanan.length}'),
+                        child: _Angka('Order masuk', '${l.pesanan.length}'),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -266,13 +253,9 @@ class _LaporanScreenState extends State<LaporanScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Per cabang',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
+                          const Text('Per cabang',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
                           const SizedBox(height: 8),
                           for (final c in _s.cabang)
                             Padding(
@@ -284,28 +267,21 @@ class _LaporanScreenState extends State<LaporanScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        Text(c.nama,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w600)),
                                         Text(
-                                          c.nama,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${l.orderPerCabang[c.id] ?? 0} order',
-                                          style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
-                                          ),
-                                        ),
+                                            '${l.orderPerCabang[c.id] ?? 0} order masuk  |  ${pembayaranCabang(c.id)} pembayaran',
+                                            style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 12)),
                                       ],
                                     ),
                                   ),
                                   Text(
-                                    rupiah(l.pendapatanPerCabang[c.id] ?? 0),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
+                                      rupiah(l.pendapatanPerCabang[c.id] ?? 0),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             ),
@@ -320,10 +296,8 @@ class _LaporanScreenState extends State<LaporanScreen> {
                   ),
                   if (l.pesanan.isEmpty)
                     const Panel(
-                      child: Text(
-                        'Tidak ada order pada periode ini.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
+                      child: Text('Tidak ada order pada periode ini.',
+                          style: TextStyle(color: Colors.grey)),
                     ),
                   for (final p in l.pesanan)
                     Panel(
@@ -335,37 +309,25 @@ class _LaporanScreenState extends State<LaporanScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _s.pelangganById(p.idPelanggan)?.nama ?? '-',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                    _s.pelangganById(p.idPelanggan)?.nama ?? '-',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600)),
+                                Text(p.noPesanan,
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 12)),
                                 Text(
-                                  p.noPesanan,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  '${_s.cabangById(p.idCabang)?.nama ?? '-'}  |  ${tglJam(p.tanggalMasuk)}',
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 11.5,
-                                  ),
-                                ),
+                                    '${_s.cabangById(p.idCabang)?.nama ?? '-'}  |  ${tglJam(p.tanggalMasuk)}',
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 11.5)),
                               ],
                             ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                rupiah(p.totalBiaya),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                              Text(rupiah(p.totalBiaya),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w700)),
                               const SizedBox(height: 4),
                               StatusChip(p.status),
                             ],
@@ -389,22 +351,21 @@ class _Angka extends StatelessWidget {
   const _Angka(this.label, this.nilai);
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: kGaris),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        const SizedBox(height: 4),
-        Text(
-          nilai,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kGaris),
         ),
-      ],
-    ),
-  );
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 4),
+            Text(nilai,
+                style:
+                    const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+          ],
+        ),
+      );
 }

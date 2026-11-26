@@ -209,7 +209,12 @@ class _Beranda extends StatelessWidget {
   const _Beranda();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: AppStore.instance,
+        builder: (context, _) => _isi(context),
+      );
+
+  Widget _isi(BuildContext context) {
     final s = AppStore.instance;
     final user = s.user!;
     final semua = s.daftarPesanan();
@@ -616,7 +621,12 @@ class _TabPesananState extends State<_TabPesanan> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+        listenable: _s,
+        builder: (context, _) => _isi(context),
+      );
+
+  Widget _isi(BuildContext context) {
     final daftar = _s.daftarPesanan(
       idCabang: _s.isOwner ? _cabang : null,
       status: _status,
